@@ -1,0 +1,53 @@
+name: Monitor Data Drift
+
+on:
+  schedule:
+    # Run every Monday at 6:00 AM UTC
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
+
+jobs:
+  monitor:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install -e ".[dev]"
+
+      - name: Download dataset
+        run: python src/download_data.py
+
+      - name: Run monitoring
+        run: python src/monitoring.py --drift-magnitude 0.15
+        env:
+          MLFLOW_TRACKING_URI: ${{ secrets.MLFLOW_TRACKING_URI }}
+
+      - name: Upload drift report
+        uses: actions/upload-artifact@v4
+        with:
+          name: evidently-reports
+          path: reports/evidently_*.html
+          retention-days: 30
+
+      - name: Check for drift alert
+        run: |
+          python -c "
+          import json
+          from src.monitoring import run_monitoring, check_drift
+          result = run_monitoring(drift_magnitude=0.15)
+          if result['retrain_decision']['should_retrain']:
+              print('::warning::Data drift detected! Consider retraining the model.')
+              for reason in result['retrain_decision']['reasons']:
+                  print(f'  - {reason}')
+          else:
+              print('No significant drift detected.')
+          "

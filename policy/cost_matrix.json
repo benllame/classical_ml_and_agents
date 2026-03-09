@@ -1,0 +1,54 @@
+{
+    "policies": {
+        "discount_10pct": {
+            "name": "Descuento 10%",
+            "description": "Descuento del 10% en el cargo mensual durante 3 meses",
+            "cost_type": "percentage_of_charges",
+            "cost_value": 0.10,
+            "cost_months": 3,
+            "fixed_cost": 0.0,
+            "retention_probability_boost": 0.15,
+            "target_segments": ["medium", "high"],
+            "min_tenure": 0,
+            "max_tenure": 72,
+            "rationale": "10% discount for 3 months balances retention incentive vs revenue loss. The 3-month window matches typical churn decision cycles."
+        },
+        "personal_call": {
+            "name": "Llamada personalizada",
+            "description": "Llamada de retención por un agente especializado de 15 min",
+            "cost_type": "fixed",
+            "cost_value": 0.0,
+            "cost_months": 0,
+            "fixed_cost": 15.0,
+            "retention_probability_boost": 0.20,
+            "target_segments": ["medium", "high"],
+            "min_tenure": 3,
+            "max_tenure": 72,
+            "rationale": "Personal outreach by trained agents addresses service dissatisfaction — the top churn driver in telco. $15 cost assumes a 15-min call at $60/hr fully-loaded agent cost. Min tenure of 3 months excludes brand-new customers where onboarding issues dominate."
+        },
+        "plan_upgrade": {
+            "name": "Upgrade de plan",
+            "description": "Upgrade gratuito de plan por 2 meses (e.g., más canales, mejor internet)",
+            "cost_type": "fixed",
+            "cost_value": 0.0,
+            "cost_months": 0,
+            "fixed_cost": 30.0,
+            "retention_probability_boost": 0.25,
+            "target_segments": ["high"],
+            "min_tenure": 6,
+            "max_tenure": 72,
+            "rationale": "Service upgrades target the highest-risk segment with the strongest retention boost. Min tenure of 6 months ensures the customer has enough history to benefit from an upgrade. Cost of $30 represents estimated COGS for 2 months of upgraded service."
+        }
+    },
+    "defaults": {
+        "monthly_budget": 5000.0,
+        "average_customer_lifetime_months": 36,
+        "discount_rate_annual": 0.10,
+        "rationale": "monthly_budget: ~1% of estimated monthly revenue. average_customer_lifetime_months=36: telco industry average. discount_rate_annual=0.10: standard WACC approximation for telco companies."
+    },
+    "metadata": {
+        "version": "1.0",
+        "created": "2025-01-01",
+        "description": "Cost-benefit matrix for churn intervention policies. Each policy defines an intervention with its cost structure, expected retention boost, and eligibility rules."
+    }
+}

@@ -1,0 +1,56 @@
+version: "3.9"
+
+services:
+  # ── MLflow Tracking Server ──
+  mlflow:
+    image: python:3.11-slim
+    command: >
+      bash -c "pip install mlflow && mlflow server
+      --host 0.0.0.0
+      --port 5000
+      --backend-store-uri sqlite:///mlflow.db
+      --default-artifact-root ./mlartifacts"
+    ports:
+      - "5000:5000"
+    volumes:
+      - mlflow-data:/app
+    working_dir: /app
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ── FastAPI Backend ──
+  api:
+    build: .
+    command: uvicorn api.main:app --host 0.0.0.0 --port 8000 --reload
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+    env_file:
+      - .env
+    environment:
+      - MLFLOW_TRACKING_URI=http://mlflow:5000
+    depends_on:
+      - mlflow
+
+  # ── Streamlit Frontend ──
+  streamlit:
+    build: .
+    command: streamlit run app/streamlit_app.py --server.port 8501 --server.address 0.0.0.0
+    ports:
+      - "8501:8501"
+    volumes:
+      - .:/app
+    env_file:
+      - .env
+    environment:
+      - MLFLOW_TRACKING_URI=http://mlflow:5000
+      - API_URL=http://api:8000
+    depends_on:
+      - api
+
+volumes:
+  mlflow-data:

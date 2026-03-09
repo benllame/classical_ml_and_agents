@@ -1,0 +1,59 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Environment variables
+.env
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# Data (raw data should be downloaded, not committed)
+data/raw/*.csv
+data/processed/*.csv
+data/interim/*.csv
+
+# Models (binary artifacts)
+models/*.joblib
+models/*.pkl
+models/*.bin
+
+# MLflow
+mlruns/
+mlartifacts/
+
+# Reports (generated)
+reports/*.html
+
+# Figures (generated)
+figures/*.png
+figures/*.svg
+figures/*.pdf
+
+# Distribution / packaging
+dist/
+build/
+*.egg-info/
+
+# Coverage
+htmlcov/
+.coverage
+coverage.xml
