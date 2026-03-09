@@ -30,7 +30,7 @@ import pandas as pd
 import seaborn as sns
 from loguru import logger
 from sklearn.feature_selection import mutual_info_classif
-from sklearn.model_selection import StratifiedKFold, cross_val_score
+from sklearn.model_selection import StratifiedKFold
 from sklearn.preprocessing import KBinsDiscretizer
 
 from src.config import (
@@ -42,16 +42,13 @@ from src.config import (
     MI_THRESHOLD,
     NOMINAL_FEATURES,
     NUMERIC_FEATURES,
-    RAW_CSV,
     TARGET_COL,
 )
 from src.eda import (
     AMBER,
     CORAL,
     CYAN,
-    DARK_BG,
     DARK_CARD,
-    GREEN,
     GRID_COLOR,
     MUTED_COLOR,
     TEXT_COLOR,
@@ -238,7 +235,7 @@ def interaction_information(
     float
         II(X1; X2; Y) — can be negative (unlike MI).
     """
-    x1x2 = np.array(["_".join(map(str, pair)) for pair in zip(x1, x2)])
+    x1x2 = np.array(["_".join(map(str, pair)) for pair in zip(x1, x2, strict=False)])
     mi_joint = mutual_information_discrete(x1x2, y, base)
     mi_x1 = mutual_information_discrete(x1, y, base)
     mi_x2 = mutual_information_discrete(x2, y, base)
@@ -788,7 +785,7 @@ def plot_mi_scores(mi_scores: pd.Series, top_n: int = 15, save: bool = True) -> 
 
     fig, ax = plt.subplots(figsize=(9, max(4, top_n * 0.4)))
     colors = [CYAN if v >= MI_THRESHOLD else MUTED_COLOR for v in top.values]
-    bars = ax.barh(range(len(top)), top.values, color=colors, edgecolor="none", alpha=0.85)
+    ax.barh(range(len(top)), top.values, color=colors, edgecolor="none", alpha=0.85)
 
     ax.set_yticks(range(len(top)))
     ax.set_yticklabels(top.index, fontsize=10)
@@ -830,7 +827,6 @@ def plot_conditional_mi_heatmap(
     set_dark_style()
     fig, ax = plt.subplots(figsize=(10, 8))
 
-    mask = np.zeros_like(cmi_matrix.values, dtype=bool)  # no mask — show all
     sns.heatmap(
         cmi_matrix,
         annot=True,
@@ -1259,7 +1255,6 @@ def greedy_forward_selection(
         }
     """
     from sklearn.model_selection import cross_val_score as _cvs
-    from sklearn.preprocessing import LabelEncoder
 
     # ── Default estimator ──
     if estimator is None:
@@ -1458,16 +1453,17 @@ if __name__ == "__main__":
                   f"AUC={step['cumulative_score']:.4f}  gain={step['gain']:+.5f}")
         print(f"\nFinal AUC : {result['final_score']:.4f}")
         print(f"Baseline  : {result['baseline_score']:.4f}")
-        print(f"Saved curve to figures/hill_climbing_curve.png")
+        print("Saved curve to figures/hill_climbing_curve.png")
 
     elif args.compare_shap:
+        from xgboost import XGBClassifier
+
         from src.explainer import (
             build_shap_explainer,
             compute_shap_values,
             run_mi_vs_shap_comparison,
         )
         from src.preprocessing import get_feature_names, load_pipeline, prepare_data
-        from xgboost import XGBClassifier
 
         logger.info("Loading pipeline for MI vs SHAP comparison...")
         pipeline = load_pipeline()

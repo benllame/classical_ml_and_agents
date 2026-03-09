@@ -95,7 +95,14 @@ target-version = "py310"
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "N", "UP", "B", "SIM"]
-ignore = ["E501"]
+ignore = [
+    "E501",
+    "N803",  # ML convention: uppercase X for feature matrices
+    "N806",  # ML convention: uppercase X for feature matrices
+]
+
+[tool.ruff.lint.per-file-ignores]
+"agent/prompts.py" = ["W291"]  # trailing spaces inside multi-line string literals
 
 [tool.isort]
 profile = "black"

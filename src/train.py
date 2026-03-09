@@ -70,6 +70,7 @@ from pathlib import Path
 from typing import Any
 
 import matplotlib
+
 matplotlib.use("Agg")  # non-interactive backend; must be set before pyplot import
 import matplotlib.pyplot as plt
 import mlflow
@@ -110,7 +111,7 @@ from src.config import (
     N_BENCHMARK_RUNS,
     RAW_CSV,
 )
-from src.eda import AMBER, CORAL, CYAN, DARK_BG, DARK_CARD, GRID_COLOR, TEXT_COLOR, set_dark_style
+from src.eda import AMBER, CORAL, CYAN, DARK_BG, TEXT_COLOR, set_dark_style
 from src.preprocessing import get_feature_names, prepare_data, save_pipeline
 
 warnings.filterwarnings("ignore")
@@ -286,7 +287,7 @@ def select_features_mi(
         mask[np.argsort(scores)[-k:]] = True
         logger.debug(f"MI threshold yielded <3 features; keeping top-{k}")
 
-    selected = [n for n, m in zip(feature_names, mask) if m]
+    selected = [n for n, m in zip(feature_names, mask, strict=False) if m]
     logger.info(
         f"MI selection: {mask.sum()}/{len(mask)} features "
         f"(threshold={mi_threshold:.4f}, top-MI={scores.max():.4f})"
@@ -604,11 +605,11 @@ def optimize_with_optuna(
     """
     try:
         import optuna
-    except ImportError:
+    except ImportError as e:
         raise ImportError(
             "Optuna is required for --optimizer optuna. "
             "Install with: pip install optuna"
-        )
+        ) from e
 
     optuna.logging.set_verbosity(optuna.logging.WARNING)
 
@@ -618,9 +619,8 @@ def optimize_with_optuna(
         direction="maximize", sampler=sampler, pruner=pruner
     )
 
-    objective = lambda trial: _optuna_objective(
-        trial, model_name, X_train, y_train, cv_folds, random_state
-    )
+    def objective(trial):
+        return _optuna_objective(trial, model_name, X_train, y_train, cv_folds, random_state)
 
     logger.info(
         f"[optuna] Starting {n_trials} trials for '{model_name}' "
@@ -742,7 +742,7 @@ def plot_confusion_matrix(y_true, y_pred, model_name: str) -> plt.Figure:
     cm = confusion_matrix(y_true, y_pred)
     fig, ax = plt.subplots(figsize=(5, 4))
 
-    im = ax.imshow(cm, cmap="Blues", alpha=0.8)
+    ax.imshow(cm, cmap="Blues", alpha=0.8)
     for i in range(2):
         for j in range(2):
             ax.text(j, i, f"{cm[i, j]:,}", ha="center", va="center",

@@ -19,16 +19,14 @@ from typing import Any
 
 import numpy as np
 import pandas as pd
-from loguru import logger
 
 from src.config import (
     CHURN_RISK_THRESHOLDS,
     DEFAULT_MONTHLY_BUDGET,
     ID_COL,
     RAW_CSV,
-    TARGET_COL,
 )
-from src.preprocessing import get_feature_names, load_pipeline, prepare_data
+from src.preprocessing import prepare_data
 
 # ── Load cost matrix ─────────────────────────────────────────────────────────
 

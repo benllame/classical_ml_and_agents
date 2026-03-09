@@ -15,14 +15,12 @@ Tools:
 from __future__ import annotations
 
 import json
-from typing import Optional
 
-import numpy as np
 import pandas as pd
 from langchain_core.tools import tool
 from loguru import logger
 
-from src.config import ID_COL, RAW_CSV, TARGET_COL
+from src.config import ID_COL, RAW_CSV
 
 # ── Lazy-loaded shared resources ─────────────────────────────────────────────
 # Resources are loaded on first use and cached globally. This avoids loading
@@ -50,8 +48,9 @@ def _get_model():
     global _model
     if _model is None:
         try:
-            from tracking.mlflow_setup import get_production_model_uri
             import mlflow
+
+            from tracking.mlflow_setup import get_production_model_uri
 
             uri = get_production_model_uri()
             _model = mlflow.pyfunc.load_model(uri)
@@ -60,6 +59,7 @@ def _get_model():
             logger.warning(f"MLflow model not available ({e}), trying local fallback...")
             try:
                 import joblib
+
                 from src.config import MODELS_DIR
 
                 model_path = MODELS_DIR / "best_model.joblib"

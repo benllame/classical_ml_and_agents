@@ -127,8 +127,9 @@ async def lifespan(app: FastAPI):
     try:
         # Try MLflow first, then local fallback
         try:
-            from tracking.mlflow_setup import get_production_model_uri
             import mlflow
+
+            from tracking.mlflow_setup import get_production_model_uri
 
             uri = get_production_model_uri()
             try:
@@ -139,6 +140,7 @@ async def lifespan(app: FastAPI):
                 logger.info(f"Model loaded from MLflow (pyfunc flavor): {uri}")
         except Exception:
             import joblib
+
             from src.config import MODELS_DIR
 
             model_path = MODELS_DIR / "best_model.joblib"
@@ -160,6 +162,7 @@ async def lifespan(app: FastAPI):
     # Pre-load data
     try:
         import pandas as pd
+
         from src.config import RAW_CSV
 
         df = pd.read_csv(RAW_CSV)
@@ -256,8 +259,9 @@ async def predict_churn(request: PredictRequest):
     # Predict
     try:
         if model is not None and pipeline is not None:
-            from src.preprocessing import prepare_data
             import pandas as pd
+
+            from src.preprocessing import prepare_data
 
             X, _, _ = prepare_data(customer_row, fit_pipeline=False, pipeline=pipeline)
             if hasattr(model, "predict_proba"):
@@ -271,7 +275,7 @@ async def predict_churn(request: PredictRequest):
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Prediction error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Prediction error: {str(e)}") from e
 
     from policy.intervention_engine import classify_risk
 

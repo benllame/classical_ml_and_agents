@@ -31,10 +31,8 @@ from src.config import (
     NOMINAL_FEATURES,
     NUMERIC_FEATURES,
     PREPROCESSOR_PATH,
-    PROCESSED_CSV,
     TARGET_COL,
 )
-
 
 # ── Custom Transformers ──────────────────────────────────────────────────────
 

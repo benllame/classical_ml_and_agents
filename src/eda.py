@@ -12,8 +12,6 @@ outputs are directly actionable by stakeholders.
 
 from __future__ import annotations
 
-from typing import Optional
-
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -242,7 +240,7 @@ def plot_churn_distribution(df: pd.DataFrame, save: bool = True) -> plt.Figure:
         edgecolor="none",
         width=0.5,
     )
-    for bar, val in zip(bars, counts.values):
+    for bar, val in zip(bars, counts.values, strict=False):
         ax.text(
             bar.get_x() + bar.get_width() / 2,
             bar.get_height() + 30,
@@ -338,7 +336,7 @@ def plot_contract_churn_rate(df: pd.DataFrame, save: bool = True) -> plt.Figure:
     colors = [CORAL, AMBER, GREEN]
     bars = ax.barh(rates.index, rates.values, color=colors[:len(rates)], height=0.5, edgecolor="none")
 
-    for bar, val in zip(bars, rates.values):
+    for bar, val in zip(bars, rates.values, strict=False):
         ax.text(
             bar.get_width() + 0.5,
             bar.get_y() + bar.get_height() / 2,

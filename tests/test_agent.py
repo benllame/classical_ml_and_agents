@@ -12,17 +12,8 @@ require a live LLM and are run separately.
 
 from __future__ import annotations
 
-import json
-
-import pytest
-
 from agent.tools import (
     ALL_TOOLS,
-    get_customer_profile,
-    predict_churn_risk,
-    explain_prediction,
-    recommend_intervention,
-    simulate_budget_allocation,
 )
 
 

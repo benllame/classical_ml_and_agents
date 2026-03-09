@@ -21,14 +21,12 @@ from __future__ import annotations
 
 import argparse
 import json
-import tempfile
 from pathlib import Path
 from typing import Any
 
 import joblib
 import matplotlib
 import matplotlib.pyplot as plt
-import mlflow
 import numpy as np
 import pandas as pd
 import shap
@@ -38,12 +36,11 @@ from src.config import (
     FIGURES_DIR,
     ID_COL,
     MODELS_DIR,
-    PROCESSED_CSV,
     RAW_CSV,
     SHAP_EXPLAINER_PATH,
     TARGET_COL,
 )
-from src.eda import CYAN, CORAL, DARK_BG, TEXT_COLOR, set_dark_style
+from src.eda import TEXT_COLOR
 from src.preprocessing import get_feature_names, load_pipeline, prepare_data
 
 matplotlib.use("Agg")  # non-interactive backend
@@ -387,13 +384,13 @@ def run_mi_vs_shap_comparison(
             "key_findings": list[str],
         }
     """
+    from src.eda import load_raw_data
     from src.information_theory import (
         compare_mi_vs_shap,
         compute_mi_scores,
         compute_rank_correlation,
         plot_mi_vs_shap,
     )
-    from src.eda import load_raw_data
 
     logger.info("── MI vs SHAP Comparison ──")
 
@@ -541,7 +538,7 @@ if __name__ == "__main__":
         # Default: build SHAP explainer from best_model.joblib + preprocessor.joblib
         logger.info("Building SHAP explainer from saved model and pipeline...")
         try:
-            from src.preprocessing import load_pipeline, prepare_data, get_feature_names
+            from src.preprocessing import get_feature_names, load_pipeline, prepare_data
 
             pipeline = load_pipeline()
             model = joblib.load(MODELS_DIR / "best_model.joblib")

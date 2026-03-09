@@ -50,23 +50,23 @@ Usage:
 from __future__ import annotations
 
 import argparse
+
 import matplotlib
+
 matplotlib.use("Agg")  # non-interactive backend; must be before pyplot import
 
-import matplotlib.pyplot as plt
+from pathlib import Path
+
 import matplotlib.gridspec as gridspec
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from pathlib import Path
-from typing import Optional
-
 from joblib import load
 from loguru import logger
 from sklearn.model_selection import train_test_split
 
 from src.config import (
     FIGURES_DIR,
-    ID_COL,
     MLFLOW_EXPERIMENT_NAME,
     MLFLOW_TRACKING_URI,
     MODELS_DIR,
@@ -80,8 +80,8 @@ from src.eda import (
     CYAN,
     DARK_BG,
     DARK_CARD,
-    GRID_COLOR,
     GREEN,
+    GRID_COLOR,
     MUTED_COLOR,
     TEXT_COLOR,
     VIOLET,
@@ -120,7 +120,7 @@ SEGMENT_LABELS = {
 
 
 def discover_best_model(
-    summary_csv: Optional[Path] = None,
+    summary_csv: Path | None = None,
 ) -> tuple[str, str, str]:
     """Auto-discover (model_name, feature_set, run_id) from benchmark summary.
 
@@ -240,8 +240,8 @@ def discover_best_model(
 
 
 def load_model_and_pipeline(
-    model_path: Optional[str] = None,
-    run_id: Optional[str] = None,
+    model_path: str | None = None,
+    run_id: str | None = None,
 ) -> tuple:
     """Load a trained classifier and the fitted preprocessing pipeline.
 
@@ -344,7 +344,7 @@ def get_model_features(
         mask = np.ones(len(feature_names), dtype=bool)
         return mask, feature_names
 
-    from src.train import select_features_mi, select_features_hill_climbing
+    from src.train import select_features_hill_climbing, select_features_mi
 
     if feature_set == "mi":
         _, mask, names = select_features_mi(
@@ -571,7 +571,7 @@ def plot_fn_profile(
     ax0.set_title("Prediction Segment Sizes", color=TEXT_COLOR)
     ax0.set_ylabel("Count", color=TEXT_COLOR)
     ax0.set_xlabel("Segment", color=TEXT_COLOR)
-    for bar, count in zip(bars, counts):
+    for bar, count in zip(bars, counts, strict=False):
         ax0.text(
             bar.get_x() + bar.get_width() / 2,
             bar.get_height() + max(counts) * 0.01,
@@ -601,7 +601,7 @@ def plot_fn_profile(
                 "markersize": 3,
             },
         )
-        for patch, color in zip(bp["boxes"], colors):
+        for patch, color in zip(bp["boxes"], colors, strict=False):
             patch.set_facecolor(color)
             patch.set_alpha(0.75)
         ax1.set_xticklabels(seg_names, color=MUTED_COLOR)
@@ -634,7 +634,7 @@ def plot_fn_profile(
                 "markersize": 3,
             },
         )
-        for patch, color in zip(bp2["boxes"], colors):
+        for patch, color in zip(bp2["boxes"], colors, strict=False):
             patch.set_facecolor(color)
             patch.set_alpha(0.75)
         ax2.set_xticklabels(seg_names, color=MUTED_COLOR)
@@ -664,7 +664,7 @@ def plot_fn_profile(
         ax3.set_title("Contract Type Breakdown — FN Customers", color=TEXT_COLOR)
         ax3.set_ylabel("Count", color=TEXT_COLOR)
         ax3.set_xlabel("Contract Type", color=TEXT_COLOR)
-        for bar, count in zip(contract_bars, contract_counts.values):
+        for bar, count in zip(contract_bars, contract_counts.values, strict=False):
             pct = count / len(fn_df) * 100
             ax3.text(
                 bar.get_x() + bar.get_width() / 2,
@@ -848,13 +848,13 @@ def plot_probability_boxplot(
         widths=0.5,
     )
 
-    for patch, color in zip(bp["boxes"], colors):
+    for patch, color in zip(bp["boxes"], colors, strict=False):
         patch.set_facecolor(color)
         patch.set_alpha(0.55)
 
     # Jittered scatter overlay for sample-level visibility
     rng = np.random.default_rng(42)
-    for i, (data, color) in enumerate(zip(proba_data, colors), start=1):
+    for i, (data, color) in enumerate(zip(proba_data, colors, strict=False), start=1):
         jitter = rng.uniform(-0.18, 0.18, size=len(data))
         ax.scatter(
             np.full(len(data), i) + jitter,
@@ -910,7 +910,7 @@ def plot_pacmap_embedding(
     segments: dict[str, pd.DataFrame],
     feature_names: list[str],
     save: bool = True,
-) -> Optional[plt.Figure]:
+) -> plt.Figure | None:
     """PaCMAP embedding of the model's feature space coloured by segment.
 
     Uses PaCMAP (Pairwise Controlled Manifold Approximation) to embed
@@ -971,14 +971,9 @@ def plot_pacmap_embedding(
     seg_labels = np.full(n_test, "OTHER", dtype=object)
     # Rebuild per-row indices from segments (they store original aligned position)
     seg_names = ["TP", "TN", "FP", "FN"]
-    seg_idx: dict[str, np.ndarray] = {}
 
     # We need index positions. The segments were built from a reset_index copy,
     # so we use the integer index of each segment's DataFrame row.
-    offset = 0
-    for seg in segments.values():
-        pass  # just to confirm structure
-
     # Reconstruct index from cumulative segment sizes in canonical order
     # (TP, TN, FP, FN all came from the same X_profile reset_index copy)
     all_segs_combined = pd.concat(
@@ -1116,9 +1111,9 @@ def print_business_summary(
 
 
 def run_fn_analysis(
-    model_path: Optional[str] = None,
-    run_id: Optional[str] = None,
-    threshold: Optional[float] = None,
+    model_path: str | None = None,
+    run_id: str | None = None,
+    threshold: float | None = None,
     test_size: float = 0.2,
     random_state: int = 42,
     months: int = 3,
@@ -1181,7 +1176,6 @@ def run_fn_analysis(
     logger.info(f"Split: train={len(train_df):,}, test={len(test_df):,}")
 
     # Keep raw test features before preprocessing (for profiling)
-    X_raw_test = test_df.drop(columns=[TARGET_COL, ID_COL], errors="ignore").reset_index(drop=True)
     y_test = test_df[TARGET_COL].values
 
     # ── 3. Auto-discover best model if requested ──────────────────────────────
@@ -1216,7 +1210,7 @@ def run_fn_analysis(
     )
     # X_model: the exact features fed to predict_proba
     X_model_test = X_test_proc[:, feat_mask]
-    model_feature_names_masked = [n for n, m in zip(feature_names_all, feat_mask) if m]
+    model_feature_names_masked = [n for n, m in zip(feature_names_all, feat_mask, strict=False) if m]
 
     # Reconcile feature count: if the model was trained on fewer features than
     # the current preprocessor produces (e.g. a feature was added after training),

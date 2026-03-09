@@ -20,7 +20,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import tempfile
 from pathlib import Path
 
 import mlflow
@@ -36,16 +35,12 @@ from evidently.report import Report
 from loguru import logger
 
 from src.config import (
-    ID_COL,
-    MLFLOW_EXPERIMENT_NAME,
     MLFLOW_MODEL_NAME,
-    MLFLOW_TRACKING_URI,
     NUMERIC_FEATURES,
     RAW_CSV,
     REPORTS_DIR,
     TARGET_COL,
 )
-from src.preprocessing import load_pipeline, prepare_data, get_feature_names
 
 # ── Column Mapping ───────────────────────────────────────────────────────────
 # Evidently needs to know which columns are numeric vs categorical so it
