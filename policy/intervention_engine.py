@@ -286,9 +286,7 @@ def get_policy(
             pred = model.predict(pd.DataFrame(X))
             churn_prob = float(pred.iloc[0]) if hasattr(pred, "iloc") else float(pred[0])
     else:
-        raise RuntimeError(
-            "Prediction model and pipeline are required. Run src/train.py first."
-        )
+        raise RuntimeError("Prediction model and pipeline are required. Run src/train.py first.")
 
     result = find_best_policy(churn_prob, monthly_charges, tenure)
     result["customer_id"] = customer_id
@@ -348,7 +346,9 @@ def simulate_budget_allocation(
             churn_probs = model.predict_proba(X)[:, 1]
         else:
             pred = model.predict(pd.DataFrame(X))
-            churn_probs = pred.iloc[:, 0].values if hasattr(pred, "iloc") else np.array(pred).flatten()
+            churn_probs = (
+                pred.iloc[:, 0].values if hasattr(pred, "iloc") else np.array(pred).flatten()
+            )
     else:
         raise RuntimeError(
             "Prediction model and pipeline are required for budget allocation. Run src/train.py first."
@@ -381,7 +381,7 @@ def simulate_budget_allocation(
     total_cost = 0.0
     total_roi = 0.0
 
-    for candidate in candidates[:top_n * 3]:
+    for candidate in candidates[: top_n * 3]:
         cost = candidate.get("cost", 0)
         if total_cost + cost > budget:
             continue
@@ -435,11 +435,7 @@ def run_simulation_comparison(
         df["Churn"] = (df["Churn"] == "Yes").astype(int)
 
     cm = load_cost_matrix()
-    cheapest_cost = min(
-        p["fixed_cost"]
-        for p in cm["policies"].values()
-        if p["fixed_cost"] > 0
-    )
+    cheapest_cost = min(p["fixed_cost"] for p in cm["policies"].values() if p["fixed_cost"] > 0)
     if cheapest_cost == 0:
         cheapest_cost = 15.0
     random_n = int(budget / cheapest_cost)
@@ -498,8 +494,11 @@ def sensitivity_analysis(
     for mult in variations:
         budget = base_budget * mult
         sim = simulate_budget_allocation(
-            budget=budget, top_n=100, df=df,
-            model=model, pipeline=pipeline,
+            budget=budget,
+            top_n=100,
+            df=df,
+            model=model,
+            pipeline=pipeline,
         )
         results.append(
             {

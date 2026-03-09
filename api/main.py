@@ -32,7 +32,9 @@ from pydantic import BaseModel, Field
 class PredictRequest(BaseModel):
     """Request schema for /predict endpoint."""
 
-    customer_id: str = Field(..., description="Unique customer identifier", examples=["7590-VHVEG"])
+    customer_id: str = Field(
+        ..., description="Unique customer identifier", examples=["7590-VHVEG"]
+    )
 
 
 class PredictResponse(BaseModel):
@@ -271,7 +273,10 @@ async def predict_churn(request: PredictRequest):
                 churn_prob = float(pred.iloc[0]) if hasattr(pred, "iloc") else float(pred[0])
             model_source = "MLflow Registry"
         else:
-            raise HTTPException(status_code=503, detail="Prediction model not loaded. Run the training pipeline first.")
+            raise HTTPException(
+                status_code=503,
+                detail="Prediction model not loaded. Run the training pipeline first.",
+            )
     except HTTPException:
         raise
     except Exception as e:

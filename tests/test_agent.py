@@ -166,6 +166,6 @@ class TestEvalSet:
             all_expected_tools.update(item["expected_tools"])
 
         tool_names = {t.name for t in ALL_TOOLS}
-        assert tool_names.issubset(all_expected_tools), (
-            f"Tools not covered in eval: {tool_names - all_expected_tools}"
-        )
+        assert tool_names.issubset(
+            all_expected_tools
+        ), f"Tools not covered in eval: {tool_names - all_expected_tools}"

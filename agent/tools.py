@@ -160,9 +160,11 @@ def get_customer_profile(customer_id: str) -> str:
         },
         "charges": {
             "monthly_charges": float(customer.get("MonthlyCharges", 0)),
-            "total_charges": float(customer.get("TotalCharges", 0))
-            if pd.notna(customer.get("TotalCharges"))
-            else None,
+            "total_charges": (
+                float(customer.get("TotalCharges", 0))
+                if pd.notna(customer.get("TotalCharges"))
+                else None
+            ),
         },
         "actual_churn": bool(customer.get("Churn", 0)),
     }

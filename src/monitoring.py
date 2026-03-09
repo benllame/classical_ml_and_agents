@@ -334,7 +334,11 @@ def maybe_retrain(
     if not reasons:
         reasons.append("No significant drift or degradation detected.")
 
-    action = "RETRAIN and register new model version" if should_retrain else "MONITOR — no action needed"
+    action = (
+        "RETRAIN and register new model version"
+        if should_retrain
+        else "MONITOR — no action needed"
+    )
 
     result = {
         "should_retrain": should_retrain,
@@ -476,7 +480,9 @@ def run_monitoring(
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run monitoring pipeline")
     parser.add_argument("--drift-magnitude", type=float, default=0.15, help="Drift intensity")
-    parser.add_argument("--auto-retrain", action="store_true", help="Auto-retrain if drift detected")
+    parser.add_argument(
+        "--auto-retrain", action="store_true", help="Auto-retrain if drift detected"
+    )
     parser.add_argument("--drift-only", action="store_true", help="Only check data drift")
     args = parser.parse_args()
 

@@ -141,9 +141,7 @@ def conditional_entropy(x: np.ndarray, y: np.ndarray, base: float = 2.0) -> floa
     return joint_entropy(x, y, base) - shannon_entropy(y, base)
 
 
-def mutual_information_discrete(
-    x: np.ndarray, y: np.ndarray, base: float = 2.0
-) -> float:
+def mutual_information_discrete(x: np.ndarray, y: np.ndarray, base: float = 2.0) -> float:
     """Compute Mutual Information I(X;Y) = H(X) + H(Y) - H(X,Y).
 
     Measures how much knowing Y reduces uncertainty about X (and vice
@@ -321,9 +319,7 @@ def compute_mi_scores(
     """
     # Tell sklearn which features are categorical so it uses counting
     # for those and k-NN density estimation for continuous ones.
-    discrete_mask = [
-        col in BINARY_FEATURES + NOMINAL_FEATURES for col in X.columns
-    ]
+    discrete_mask = [col in BINARY_FEATURES + NOMINAL_FEATURES for col in X.columns]
 
     # Encode categoricals as integers for sklearn
     X_encoded = X.copy()
@@ -408,9 +404,7 @@ def compute_conditional_mi_matrix(
         for j, fj in enumerate(top_features):
             if i == j:
                 # Diagonal: standard MI
-                cmi_matrix.loc[fi, fj] = mutual_information_discrete(
-                    X_disc[fi].values, y_arr
-                )
+                cmi_matrix.loc[fi, fj] = mutual_information_discrete(X_disc[fi].values, y_arr)
             else:
                 cmi_matrix.loc[fi, fj] = conditional_mutual_information(
                     X_disc[fi].values, y_arr, X_disc[fj].values
@@ -475,9 +469,7 @@ def compute_interaction_matrix(
         for j, fj in enumerate(top_features):
             if i >= j:
                 continue  # symmetric + diagonal is 0
-            ii_val = interaction_information(
-                X_disc[fi].values, X_disc[fj].values, y_arr
-            )
+            ii_val = interaction_information(X_disc[fi].values, X_disc[fj].values, y_arr)
             ii_matrix.loc[fi, fj] = ii_val
             ii_matrix.loc[fj, fi] = ii_val
 
@@ -527,9 +519,7 @@ def select_features_mi(
     dropped = mi_scores[mi_scores < threshold].index.tolist()
 
     if dropped:
-        logger.info(
-            f"Dropped {len(dropped)} features below MI threshold ({threshold}): {dropped}"
-        )
+        logger.info(f"Dropped {len(dropped)} features below MI threshold ({threshold}): {dropped}")
 
     # Redundancy analysis on selected features
     redundancy_report = []
@@ -548,9 +538,7 @@ def select_features_mi(
             for j in range(i + 1, len(selected)):
                 fi, fj = selected[i], selected[j]
                 # MI between the two features
-                mi_pair = mutual_information_discrete(
-                    X_disc[fi].values, X_disc[fj].values
-                )
+                mi_pair = mutual_information_discrete(X_disc[fi].values, X_disc[fj].values)
                 # CMI: how much does fi tell about Y beyond fj?
                 cmi_val = conditional_mutual_information(
                     X_disc[fi].values, y_arr, X_disc[fj].values
@@ -628,17 +616,14 @@ def compare_mi_vs_shap(
         # Try prefix-based mapping: SHAP names may have prefixes like
         # "num__", "bin__", "nom__". We strip them and aggregate OHE
         # levels back to the original feature name.
-        logger.info(
-            "Direct name match found < 3 features; "
-            "attempting prefix-based mapping"
-        )
+        logger.info("Direct name match found < 3 features; " "attempting prefix-based mapping")
         shap_to_raw = {}
         for shap_name in shap_importance.index:
             # Strip prefixes like num__, bin__, nom__
             raw = shap_name
             for prefix in ["num__", "bin__", "nom__"]:
                 if raw.startswith(prefix):
-                    raw = raw[len(prefix):]
+                    raw = raw[len(prefix) :]
                     break
             # For OHE features like nom__Contract_Two year, map to Contract
             if "_" in raw:
@@ -792,8 +777,14 @@ def plot_mi_scores(mi_scores: pd.Series, top_n: int = 15, save: bool = True) -> 
     ax.invert_yaxis()
     ax.set_xlabel("Mutual Information I(X; Churn)  [nats]", fontsize=11)
     ax.set_title("Información Mutua — Features vs Churn", fontsize=13, color=TEXT_COLOR)
-    ax.axvline(MI_THRESHOLD, color=CORAL, linestyle="--", alpha=0.7, linewidth=1,
-               label=f"Umbral = {MI_THRESHOLD}")
+    ax.axvline(
+        MI_THRESHOLD,
+        color=CORAL,
+        linestyle="--",
+        alpha=0.7,
+        linewidth=1,
+        label=f"Umbral = {MI_THRESHOLD}",
+    )
     ax.legend(loc="lower right", framealpha=0.8)
     ax.grid(axis="x", alpha=0.2)
 
@@ -805,9 +796,7 @@ def plot_mi_scores(mi_scores: pd.Series, top_n: int = 15, save: bool = True) -> 
     return fig
 
 
-def plot_conditional_mi_heatmap(
-    cmi_matrix: pd.DataFrame, save: bool = True
-) -> plt.Figure:
+def plot_conditional_mi_heatmap(cmi_matrix: pd.DataFrame, save: bool = True) -> plt.Figure:
     """Heatmap of Conditional MI: I(Xi; Churn | Xj).
 
     Diagonal = marginal MI. Off-diagonal = how much MI remains after
@@ -856,9 +845,7 @@ def plot_conditional_mi_heatmap(
     return fig
 
 
-def plot_interaction_information(
-    ii_matrix: pd.DataFrame, save: bool = True
-) -> plt.Figure:
+def plot_interaction_information(ii_matrix: pd.DataFrame, save: bool = True) -> plt.Figure:
     """Heatmap of Interaction Information II(Xi; Xj; Churn).
 
     Red = redundancy (II < 0). Blue = synergy (II > 0).
@@ -898,8 +885,7 @@ def plot_interaction_information(
     )
 
     ax.set_title(
-        "Información de Interacción — II(Xi; Xj; Churn)\n"
-        "Azul = Sinergia · Rojo = Redundancia",
+        "Información de Interacción — II(Xi; Xj; Churn)\n" "Azul = Sinergia · Rojo = Redundancia",
         fontsize=12,
         color=TEXT_COLOR,
     )
@@ -907,7 +893,9 @@ def plot_interaction_information(
     plt.tight_layout()
     if save:
         FIGURES_DIR.mkdir(parents=True, exist_ok=True)
-        fig.savefig(FIGURES_DIR / "interaction_information_heatmap.png", dpi=150, bbox_inches="tight")
+        fig.savefig(
+            FIGURES_DIR / "interaction_information_heatmap.png", dpi=150, bbox_inches="tight"
+        )
         logger.info("Saved interaction_information_heatmap.png")
     return fig
 
@@ -942,8 +930,14 @@ def plot_mi_vs_shap(
     df = comparison_df.copy()
 
     ax.scatter(
-        df["MI_rank"], df["SHAP_rank"],
-        c=CYAN, s=70, alpha=0.8, edgecolors="white", linewidths=0.5, zorder=3,
+        df["MI_rank"],
+        df["SHAP_rank"],
+        c=CYAN,
+        s=70,
+        alpha=0.8,
+        edgecolors="white",
+        linewidths=0.5,
+        zorder=3,
     )
 
     # Label each point
@@ -960,8 +954,14 @@ def plot_mi_vs_shap(
 
     # Diagonal (perfect agreement)
     max_rank = max(df["MI_rank"].max(), df["SHAP_rank"].max()) + 1
-    ax.plot([1, max_rank], [1, max_rank], color=CORAL, linestyle="--", alpha=0.5,
-            label="Concordancia perfecta")
+    ax.plot(
+        [1, max_rank],
+        [1, max_rank],
+        color=CORAL,
+        linestyle="--",
+        alpha=0.5,
+        label="Concordancia perfecta",
+    )
     ax.set_xlabel("MI Rank (1 = más informativo)", fontsize=11)
     ax.set_ylabel("SHAP Rank (1 = más importante para el modelo)", fontsize=11)
     ax.set_title("MI vs SHAP — Comparación de Rankings", fontsize=13, color=TEXT_COLOR)
@@ -974,9 +974,14 @@ def plot_mi_vs_shap(
             f"Kendall τ = {rank_corr['kendall_tau']:.3f}"
         )
         ax.text(
-            0.95, 0.05, corr_text,
-            transform=ax.transAxes, fontsize=10, color=AMBER,
-            ha="right", va="bottom",
+            0.95,
+            0.05,
+            corr_text,
+            transform=ax.transAxes,
+            fontsize=10,
+            color=AMBER,
+            ha="right",
+            va="bottom",
             bbox=dict(boxstyle="round,pad=0.3", facecolor=DARK_CARD, edgecolor=GRID_COLOR),
         )
 
@@ -989,11 +994,33 @@ def plot_mi_vs_shap(
     bar_height = 0.35
 
     # Normalize both scores to [0, 1] for visual comparison
-    mi_norm = df_sorted["MI_score"] / df_sorted["MI_score"].max() if df_sorted["MI_score"].max() > 0 else df_sorted["MI_score"]
-    shap_norm = df_sorted["mean_abs_SHAP"] / df_sorted["mean_abs_SHAP"].max() if df_sorted["mean_abs_SHAP"].max() > 0 else df_sorted["mean_abs_SHAP"]
+    mi_norm = (
+        df_sorted["MI_score"] / df_sorted["MI_score"].max()
+        if df_sorted["MI_score"].max() > 0
+        else df_sorted["MI_score"]
+    )
+    shap_norm = (
+        df_sorted["mean_abs_SHAP"] / df_sorted["mean_abs_SHAP"].max()
+        if df_sorted["mean_abs_SHAP"].max() > 0
+        else df_sorted["mean_abs_SHAP"]
+    )
 
-    ax2.barh(y_pos - bar_height / 2, mi_norm, bar_height, color=CYAN, alpha=0.8, label="MI (normalizada)")
-    ax2.barh(y_pos + bar_height / 2, shap_norm, bar_height, color=VIOLET, alpha=0.8, label="SHAP (normalizada)")
+    ax2.barh(
+        y_pos - bar_height / 2,
+        mi_norm,
+        bar_height,
+        color=CYAN,
+        alpha=0.8,
+        label="MI (normalizada)",
+    )
+    ax2.barh(
+        y_pos + bar_height / 2,
+        shap_norm,
+        bar_height,
+        color=VIOLET,
+        alpha=0.8,
+        label="SHAP (normalizada)",
+    )
 
     ax2.set_yticks(y_pos)
     ax2.set_yticklabels(df_sorted["feature"], fontsize=9)
@@ -1039,7 +1066,9 @@ def plot_entropy_profile(X: pd.DataFrame, save: bool = True) -> plt.Figure:
             # Discretize for entropy calculation
             valid = vals.dropna()
             if len(valid) > 0:
-                binner = KBinsDiscretizer(n_bins=N_BINS_DISCRETIZE, encode="ordinal", strategy="quantile")
+                binner = KBinsDiscretizer(
+                    n_bins=N_BINS_DISCRETIZE, encode="ordinal", strategy="quantile"
+                )
                 vals = pd.Series(
                     binner.fit_transform(valid.values.reshape(-1, 1)).ravel().astype(int),
                     index=valid.index,
@@ -1055,7 +1084,9 @@ def plot_entropy_profile(X: pd.DataFrame, save: bool = True) -> plt.Figure:
     ax.set_yticklabels(ent_series.index, fontsize=9)
     ax.invert_yaxis()
     ax.set_xlabel("Entropía de Shannon H(X)  [bits]", fontsize=11)
-    ax.set_title("Perfil de Entropía — Contenido Informativo por Feature", fontsize=13, color=TEXT_COLOR)
+    ax.set_title(
+        "Perfil de Entropía — Contenido Informativo por Feature", fontsize=13, color=TEXT_COLOR
+    )
     ax.grid(axis="x", alpha=0.2)
 
     plt.tight_layout()
@@ -1260,6 +1291,7 @@ def greedy_forward_selection(
     if estimator is None:
         try:
             from xgboost import XGBClassifier
+
             estimator = XGBClassifier(
                 random_state=random_state,
                 eval_metric="logloss",
@@ -1270,6 +1302,7 @@ def greedy_forward_selection(
             )
         except ImportError:
             from sklearn.ensemble import RandomForestClassifier
+
             estimator = RandomForestClassifier(
                 random_state=random_state, n_estimators=100, class_weight="balanced"
             )
@@ -1288,9 +1321,9 @@ def greedy_forward_selection(
     if mi_seed:
         mi_scores = compute_mi_scores(X, y, random_state=random_state)
         # Order: highest MI first; unknown features go to the end
-        feature_order = [
-            f for f in mi_scores.index if f in all_features
-        ] + [f for f in all_features if f not in mi_scores.index]
+        feature_order = [f for f in mi_scores.index if f in all_features] + [
+            f for f in all_features if f not in mi_scores.index
+        ]
     else:
         feature_order = list(all_features)
 
@@ -1299,8 +1332,10 @@ def greedy_forward_selection(
     baseline_score = float(
         _cvs(estimator, X_enc[all_features], y, cv=cv, scoring=scoring, n_jobs=-1).mean()
     )
-    logger.info(f"[hill-climbing] Baseline (all {len(all_features)} features): "
-                f"{scoring}={baseline_score:.4f}")
+    logger.info(
+        f"[hill-climbing] Baseline (all {len(all_features)} features): "
+        f"{scoring}={baseline_score:.4f}"
+    )
 
     selected: list[str] = []
     candidates: list[str] = list(feature_order)
@@ -1317,8 +1352,12 @@ def greedy_forward_selection(
             trial_set = selected + [feat]
             score = float(
                 _cvs(
-                    estimator, X_enc[trial_set], y,
-                    cv=cv, scoring=scoring, n_jobs=-1,
+                    estimator,
+                    X_enc[trial_set],
+                    y,
+                    cv=cv,
+                    scoring=scoring,
+                    n_jobs=-1,
                 ).mean()
             )
             gain = score - current_score
@@ -1338,12 +1377,14 @@ def greedy_forward_selection(
         candidates.remove(best_feature)
         current_score = best_score
         cv_scores.append(best_score)
-        score_history.append({
-            "step": len(selected),
-            "added_feature": best_feature,
-            "gain": round(best_gain, 5),
-            "cumulative_score": round(best_score, 5),
-        })
+        score_history.append(
+            {
+                "step": len(selected),
+                "added_feature": best_feature,
+                "gain": round(best_gain, 5),
+                "cumulative_score": round(best_score, 5),
+            }
+        )
 
         logger.info(
             f"[hill-climbing] Step {len(selected):2d}: +{best_feature} "
@@ -1384,14 +1425,31 @@ def plot_hill_climbing_curve(result: dict, save: bool = True) -> plt.Figure:
     baseline = result["baseline_score"]
 
     fig, ax = plt.subplots(figsize=(8, 4))
-    ax.plot(range(1, len(scores) + 1), scores, color=CYAN, linewidth=2,
-            marker="o", markersize=4, label="SFS (greedy)")
-    ax.axhline(baseline, color=CORAL, linestyle="--", linewidth=1.5,
-               label=f"Baseline (todas las features) = {baseline:.4f}")
+    ax.plot(
+        range(1, len(scores) + 1),
+        scores,
+        color=CYAN,
+        linewidth=2,
+        marker="o",
+        markersize=4,
+        label="SFS (greedy)",
+    )
+    ax.axhline(
+        baseline,
+        color=CORAL,
+        linestyle="--",
+        linewidth=1.5,
+        label=f"Baseline (todas las features) = {baseline:.4f}",
+    )
 
     best_idx = int(np.argmax(scores))
-    ax.axvline(best_idx + 1, color=AMBER, linestyle=":", linewidth=1.5,
-               label=f"Mejor subset: {best_idx + 1} features = {scores[best_idx]:.4f}")
+    ax.axvline(
+        best_idx + 1,
+        color=AMBER,
+        linestyle=":",
+        linewidth=1.5,
+        label=f"Mejor subset: {best_idx + 1} features = {scores[best_idx]:.4f}",
+    )
 
     ax.set_xlabel("Número de features seleccionadas", fontsize=11)
     ax.set_ylabel("CV ROC-AUC (media)", fontsize=11)
@@ -1410,19 +1468,27 @@ def plot_hill_climbing_curve(result: dict, save: bool = True) -> plt.Figure:
 # ── CLI ──────────────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Information Theory analysis for churn prediction")
-    parser.add_argument("--mi-only", action="store_true", help="Only compute MI scores (skip CMI/II)")
-    parser.add_argument(
-        "--hill-climbing", action="store_true",
-        help="Run greedy forward selection (hill climbing) and save curve plot"
+    parser = argparse.ArgumentParser(
+        description="Information Theory analysis for churn prediction"
     )
     parser.add_argument(
-        "--max-features", type=int, default=None,
-        help="Maximum features to select in hill climbing (default: auto-stop)"
+        "--mi-only", action="store_true", help="Only compute MI scores (skip CMI/II)"
     )
     parser.add_argument(
-        "--compare-shap", action="store_true",
-        help="Compare MI scores vs SHAP importances (requires a trained model with SHAP values)"
+        "--hill-climbing",
+        action="store_true",
+        help="Run greedy forward selection (hill climbing) and save curve plot",
+    )
+    parser.add_argument(
+        "--max-features",
+        type=int,
+        default=None,
+        help="Maximum features to select in hill climbing (default: auto-stop)",
+    )
+    parser.add_argument(
+        "--compare-shap",
+        action="store_true",
+        help="Compare MI scores vs SHAP importances (requires a trained model with SHAP values)",
     )
     args = parser.parse_args()
 
@@ -1442,15 +1508,15 @@ if __name__ == "__main__":
         df = load_raw_data()
         y = df[TARGET_COL].values
         X = df.drop(columns=[TARGET_COL, ID_COL], errors="ignore")
-        result = greedy_forward_selection(
-            X, y, max_features=args.max_features, random_state=42
-        )
+        result = greedy_forward_selection(X, y, max_features=args.max_features, random_state=42)
         fig = plot_hill_climbing_curve(result, save=True)
         plt.close(fig)
         print("\n── Selected Features (in order of addition) ──")
         for step in result["score_history"]:
-            print(f"  Step {step['step']:2d}: {step['added_feature']:<30} "
-                  f"AUC={step['cumulative_score']:.4f}  gain={step['gain']:+.5f}")
+            print(
+                f"  Step {step['step']:2d}: {step['added_feature']:<30} "
+                f"AUC={step['cumulative_score']:.4f}  gain={step['gain']:+.5f}"
+            )
         print(f"\nFinal AUC : {result['final_score']:.4f}")
         print(f"Baseline  : {result['baseline_score']:.4f}")
         print("Saved curve to figures/hill_climbing_curve.png")
@@ -1513,5 +1579,7 @@ if __name__ == "__main__":
         if results["selection_result"]["redundancy_report"]:
             print("\n── Redundancy Report ──")
             for r in results["selection_result"]["redundancy_report"]:
-                print(f"  {r['feature_a']} ↔ {r['feature_b']}: "
-                      f"redundancy={r['redundancy_ratio']:.0%} — {r['interpretation']}")
+                print(
+                    f"  {r['feature_a']} ↔ {r['feature_b']}: "
+                    f"redundancy={r['redundancy_ratio']:.0%} — {r['interpretation']}"
+                )

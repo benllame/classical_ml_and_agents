@@ -505,9 +505,7 @@ def _optuna_objective(
             "gamma": trial.suggest_float("gamma", 0.0, 0.5),
             "reg_alpha": trial.suggest_float("reg_alpha", 1e-3, 1.0, log=True),
             "reg_lambda": trial.suggest_float("reg_lambda", 0.5, 3.0),
-            "scale_pos_weight": trial.suggest_categorical(
-                "scale_pos_weight", [1, 2, 3, 5]
-            ),
+            "scale_pos_weight": trial.suggest_categorical("scale_pos_weight", [1, 2, 3, 5]),
         }
         estimator = XGBClassifier(
             random_state=random_state,
@@ -529,22 +527,14 @@ def _optuna_objective(
                 "auto_class_weights", ["Balanced", "None"]
             ),
         }
-        estimator = CatBoostClassifier(
-            random_seed=random_state, silent=True, **params
-        )
+        estimator = CatBoostClassifier(random_seed=random_state, silent=True, **params)
 
     elif model_name == "mlp":
-        layer_choices = [
-            (64,), (128,), (128, 64), (256, 128), (128, 64, 32)
-        ]
+        layer_choices = [(64,), (128,), (128, 64), (256, 128), (128, 64, 32)]
         params = {
-            "hidden_layer_sizes": trial.suggest_categorical(
-                "hidden_layer_sizes", layer_choices
-            ),
+            "hidden_layer_sizes": trial.suggest_categorical("hidden_layer_sizes", layer_choices),
             "alpha": trial.suggest_float("alpha", 1e-4, 1e-1, log=True),
-            "learning_rate_init": trial.suggest_float(
-                "learning_rate_init", 1e-3, 1e-2, log=True
-            ),
+            "learning_rate_init": trial.suggest_float("learning_rate_init", 1e-3, 1e-2, log=True),
             "activation": trial.suggest_categorical("activation", ["relu", "tanh"]),
         }
         estimator = MLPClassifier(
@@ -560,9 +550,7 @@ def _optuna_objective(
         raise ValueError(f"Optuna not supported for model '{model_name}'")
 
     cv = StratifiedKFold(n_splits=cv_folds, shuffle=True, random_state=random_state)
-    scores = cross_val_score(
-        estimator, X_train, y_train, cv=cv, scoring="roc_auc", n_jobs=-1
-    )
+    scores = cross_val_score(estimator, X_train, y_train, cv=cv, scoring="roc_auc", n_jobs=-1)
     return float(scores.mean())
 
 
@@ -607,17 +595,14 @@ def optimize_with_optuna(
         import optuna
     except ImportError as e:
         raise ImportError(
-            "Optuna is required for --optimizer optuna. "
-            "Install with: pip install optuna"
+            "Optuna is required for --optimizer optuna. " "Install with: pip install optuna"
         ) from e
 
     optuna.logging.set_verbosity(optuna.logging.WARNING)
 
     sampler = optuna.samplers.TPESampler(seed=random_state)
     pruner = optuna.pruners.MedianPruner(n_startup_trials=10, n_warmup_steps=5)
-    study = optuna.create_study(
-        direction="maximize", sampler=sampler, pruner=pruner
-    )
+    study = optuna.create_study(direction="maximize", sampler=sampler, pruner=pruner)
 
     def objective(trial):
         return _optuna_objective(trial, model_name, X_train, y_train, cv_folds, random_state)
@@ -630,9 +615,7 @@ def optimize_with_optuna(
 
     best_params = study.best_params
     best_cv_auc = study.best_value
-    logger.info(
-        f"[optuna] Best CV AUC = {best_cv_auc:.4f} | params = {best_params}"
-    )
+    logger.info(f"[optuna] Best CV AUC = {best_cv_auc:.4f} | params = {best_params}")
 
     # Reconstruct the best model and fit on full training set
     if model_name == "random_forest":
@@ -646,17 +629,24 @@ def optimize_with_optuna(
         )
     elif model_name == "xgboost":
         from xgboost import XGBClassifier
+
         best_model = XGBClassifier(
-            random_state=random_state, eval_metric="logloss",
-            use_label_encoder=False, **best_params
+            random_state=random_state,
+            eval_metric="logloss",
+            use_label_encoder=False,
+            **best_params,
         )
     elif model_name == "catboost":
         from catboost import CatBoostClassifier
+
         best_model = CatBoostClassifier(random_seed=random_state, silent=True, **best_params)
     elif model_name == "mlp":
         best_model = MLPClassifier(
-            random_state=random_state, max_iter=500,
-            early_stopping=True, validation_fraction=0.1, n_iter_no_change=20,
+            random_state=random_state,
+            max_iter=500,
+            early_stopping=True,
+            validation_fraction=0.1,
+            n_iter_no_change=20,
             hidden_layer_sizes=best_params["hidden_layer_sizes"],
             alpha=best_params["alpha"],
             learning_rate_init=best_params["learning_rate_init"],
@@ -745,8 +735,16 @@ def plot_confusion_matrix(y_true, y_pred, model_name: str) -> plt.Figure:
     ax.imshow(cm, cmap="Blues", alpha=0.8)
     for i in range(2):
         for j in range(2):
-            ax.text(j, i, f"{cm[i, j]:,}", ha="center", va="center",
-                    fontsize=16, fontweight="bold", color=TEXT_COLOR)
+            ax.text(
+                j,
+                i,
+                f"{cm[i, j]:,}",
+                ha="center",
+                va="center",
+                fontsize=16,
+                fontweight="bold",
+                color=TEXT_COLOR,
+            )
 
     ax.set_xticks([0, 1])
     ax.set_yticks([0, 1])
@@ -777,7 +775,9 @@ def plot_roc_curve(y_true, y_proba, model_name: str, auc_score: float) -> plt.Fi
     return fig
 
 
-def plot_feature_importance(model, feature_names: list[str], model_name: str, top_n: int = 15) -> plt.Figure | None:
+def plot_feature_importance(
+    model, feature_names: list[str], model_name: str, top_n: int = 15
+) -> plt.Figure | None:
     """Create feature importance bar plot."""
     set_dark_style()
     try:
@@ -867,8 +867,13 @@ def plot_profit_curve(thresholds, profits, optimal_threshold, model_name: str) -
     set_dark_style()
     fig, ax = plt.subplots(figsize=(7, 4))
     ax.plot(thresholds, profits, color=CYAN, linewidth=2)
-    ax.axvline(optimal_threshold, color=AMBER, linestyle="--", linewidth=1.5,
-               label=f"Optimal: {optimal_threshold:.2f}")
+    ax.axvline(
+        optimal_threshold,
+        color=AMBER,
+        linestyle="--",
+        linewidth=1.5,
+        label=f"Optimal: {optimal_threshold:.2f}",
+    )
     ax.fill_between(thresholds, profits, alpha=0.1, color=CYAN)
     ax.set_xlabel("Threshold")
     ax.set_ylabel("Profit ($)")
@@ -942,6 +947,7 @@ def train_single_model(
         estimator = _get_catboost_estimator(random_state=random_state)
     else:
         import copy
+
         estimator = copy.deepcopy(config["estimator"])
         # Propagate random_state when the estimator supports it
         if hasattr(estimator, "random_state"):
@@ -985,9 +991,7 @@ def train_single_model(
 
         else:
             # RandomizedSearchCV (default)
-            cv = StratifiedKFold(
-                n_splits=cv_folds, shuffle=True, random_state=random_state
-            )
+            cv = StratifiedKFold(n_splits=cv_folds, shuffle=True, random_state=random_state)
             search = RandomizedSearchCV(
                 estimator,
                 param_distributions=config["params"],
@@ -1005,8 +1009,11 @@ def train_single_model(
 
         # ── OOF threshold optimisation ──
         oof_threshold = find_oof_threshold(
-            best_model, X_train, y_train,
-            cv_folds=cv_folds, random_state=random_state,
+            best_model,
+            X_train,
+            y_train,
+            cv_folds=cv_folds,
+            random_state=random_state,
         )
         mlflow.log_metric("oof_threshold", oof_threshold)
 
@@ -1342,22 +1349,28 @@ def run_repeated_benchmark(
                     n_trials=n_trials,
                     feature_set=fs,
                 )
-                raw_records.append({
-                    "seed": seed,
-                    "feature_set": fs,
-                    "n_features": int(mask.sum()),
-                    "model": name,
-                    **result["metrics"],
-                    "oof_threshold": result["oof_threshold"],
-                    "run_id": result["run_id"],
-                })
+                raw_records.append(
+                    {
+                        "seed": seed,
+                        "feature_set": fs,
+                        "n_features": int(mask.sum()),
+                        "model": name,
+                        **result["metrics"],
+                        "oof_threshold": result["oof_threshold"],
+                        "run_id": result["run_id"],
+                    }
+                )
 
     raw_df = pd.DataFrame(raw_records)
 
     # ── Summary: mean ± std grouped by (feature_set, model) ──
     metric_cols = [
-        "test_roc_auc", "test_f1_macro", "test_f1_churn",
-        "test_precision", "test_recall", "test_accuracy",
+        "test_roc_auc",
+        "test_f1_macro",
+        "test_f1_churn",
+        "test_precision",
+        "test_recall",
+        "test_accuracy",
     ]
     summary_rows = []
     for fs in feature_sets:
@@ -1413,13 +1426,16 @@ def run_repeated_benchmark(
 
     # ── Console output ──
     logger.success(
-        f"Comprehensive benchmark complete ({n_runs} seeds). "
-        f"Results saved to {MODELS_DIR}"
+        f"Comprehensive benchmark complete ({n_runs} seeds). " f"Results saved to {MODELS_DIR}"
     )
     logger.info(f"\n{'='*70}\nSummary (mean ± std over {n_runs} seeds):\n{'='*70}")
     display_cols = [
-        "feature_set", "model", "n_features_mean",
-        "roc_auc", "f1_macro", "f1_churn",
+        "feature_set",
+        "model",
+        "n_features_mean",
+        "roc_auc",
+        "f1_macro",
+        "f1_churn",
     ]
     logger.info("\n" + summary_df[display_cols].to_string(index=False))
 
@@ -1441,12 +1457,14 @@ def run_repeated_benchmark(
             f"Best configuration: {best_model_name} | {best_fs} | "
             f"ROC-AUC={best_row['roc_auc_mean']:.4f} ± {best_row['roc_auc_std']:.4f}"
         )
-        _register_best_model({
-            "run_id": best_candidate["run_id"],
-            "model_name": best_model_name,
-            "feature_set": best_fs,
-            "metrics": {"test_roc_auc": best_candidate["test_roc_auc"]},
-        })
+        _register_best_model(
+            {
+                "run_id": best_candidate["run_id"],
+                "model_name": best_model_name,
+                "feature_set": best_fs,
+                "metrics": {"test_roc_auc": best_candidate["test_roc_auc"]},
+            }
+        )
 
     return {
         "summary": summary_df,
@@ -1502,12 +1520,21 @@ def print_results_for_readme(summary_df: pd.DataFrame) -> None:
     Call after run_repeated_benchmark() to get copy-paste text for README.
     """
     print("\n\n=== COPY-PASTE FOR README ===\n")
-    print("| Feature Set | Model | N Features | ROC-AUC | F1-Macro | F1-Churn | Precision | Recall |")
-    print("|-------------|-------|-----------|---------|----------|----------|-----------|--------|")
+    print(
+        "| Feature Set | Model | N Features | ROC-AUC | F1-Macro | F1-Churn | Precision | Recall |"
+    )
+    print(
+        "|-------------|-------|-----------|---------|----------|----------|-----------|--------|"
+    )
     display_cols = [
-        "feature_set", "model", "n_features_mean",
-        "roc_auc", "f1_macro", "f1_churn",
-        "precision", "recall",
+        "feature_set",
+        "model",
+        "n_features_mean",
+        "roc_auc",
+        "f1_macro",
+        "f1_churn",
+        "precision",
+        "recall",
     ]
     for _, row in summary_df[display_cols].iterrows():
         n_feat = f"{row['n_features_mean']:.0f}" if not pd.isna(row["n_features_mean"]) else "—"
@@ -1535,7 +1562,7 @@ if __name__ == "__main__":
         type=str,
         default=None,
         help="Train only this model (default: all). "
-             "Choices: dummy, random_forest, xgboost, catboost, mlp",
+        "Choices: dummy, random_forest, xgboost, catboost, mlp",
     )
     parser.add_argument(
         "--feature-sets",

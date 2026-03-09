@@ -116,9 +116,7 @@ class FeatureEngineer(BaseEstimator, TransformerMixin):
         # The #1 churn predictor in this dataset — worth having as its own
         # feature so it can gate the interaction features below.
         if "Contract" in X.columns:
-            X["monthly_contract"] = (
-                X["Contract"].str.strip() == "Month-to-month"
-            ).astype(int)
+            X["monthly_contract"] = (X["Contract"].str.strip() == "Month-to-month").astype(int)
         else:
             X["monthly_contract"] = 0
 
@@ -138,9 +136,7 @@ class FeatureEngineer(BaseEstimator, TransformerMixin):
         # early_monthly: month-to-month AND tenure ≤ 12.
         # The single highest-risk segment (~55% churn). Two individually
         # important features combine into something even stronger.
-        X["early_monthly"] = (
-            (X["monthly_contract"] == 1) & (X["tenure"] <= 12)
-        ).astype(int)
+        X["early_monthly"] = ((X["monthly_contract"] == 1) & (X["tenure"] <= 12)).astype(int)
 
         # no_sticky_count: how many of the four value-add services
         # (OnlineSecurity, OnlineBackup, DeviceProtection, TechSupport)
@@ -177,8 +173,7 @@ class FeatureEngineer(BaseEstimator, TransformerMixin):
         # tend to quietly compound until they cancel.
         if all(c in X.columns for c in ["SeniorCitizen", "Contract"]):
             X["senior_monthly"] = (
-                (X["SeniorCitizen"] == 1)
-                & (X["Contract"].str.strip() == "Month-to-month")
+                (X["SeniorCitizen"] == 1) & (X["Contract"].str.strip() == "Month-to-month")
             ).astype(int)
         else:
             X["senior_monthly"] = 0
@@ -215,9 +210,7 @@ class FeatureEngineer(BaseEstimator, TransformerMixin):
         # highest_risk: fiber_unprotected AND early_monthly at the same time.
         # The intersection of these two high-risk groups is the most at-risk
         # segment in the dataset (~60% churn). Worth calling out explicitly.
-        X["highest_risk"] = (
-            (X["fiber_unprotected"] == 1) & (X["early_monthly"] == 1)
-        ).astype(int)
+        X["highest_risk"] = ((X["fiber_unprotected"] == 1) & (X["early_monthly"] == 1)).astype(int)
 
         return X
 
@@ -298,9 +291,7 @@ def build_preprocessor() -> ColumnTransformer:
     # rather than blowing up.
     binary_pipeline = Pipeline(
         steps=[
-            ("encoder", OrdinalEncoder(
-                handle_unknown="use_encoded_value", unknown_value=-1
-            )),
+            ("encoder", OrdinalEncoder(handle_unknown="use_encoded_value", unknown_value=-1)),
         ]
     )
 
@@ -309,11 +300,14 @@ def build_preprocessor() -> ColumnTransformer:
     # handle_unknown='ignore' means unseen categories become all-zeros rows.
     nominal_pipeline = Pipeline(
         steps=[
-            ("encoder", OneHotEncoder(
-                handle_unknown="ignore",
-                sparse_output=False,
-                drop="if_binary",
-            )),
+            (
+                "encoder",
+                OneHotEncoder(
+                    handle_unknown="ignore",
+                    sparse_output=False,
+                    drop="if_binary",
+                ),
+            ),
         ]
     )
 
@@ -325,11 +319,14 @@ def build_preprocessor() -> ColumnTransformer:
     # one-hot encoding it into 3 separate columns.
     contract_ordinal_pipeline = Pipeline(
         steps=[
-            ("encoder", OrdinalEncoder(
-                categories=[["Month-to-month", "One year", "Two year"]],
-                handle_unknown="use_encoded_value",
-                unknown_value=-1,
-            )),
+            (
+                "encoder",
+                OrdinalEncoder(
+                    categories=[["Month-to-month", "One year", "Two year"]],
+                    handle_unknown="use_encoded_value",
+                    unknown_value=-1,
+                ),
+            ),
         ]
     )
 

@@ -50,7 +50,9 @@ class AgentState(TypedDict):
 # ── LLM Factory ──────────────────────────────────────────────────────────────
 
 
-def create_llm(provider: str | None = None, model: str | None = None, temperature: float | None = None):
+def create_llm(
+    provider: str | None = None, model: str | None = None, temperature: float | None = None
+):
     """Create the LLM instance based on configuration.
 
     We use temperature=0.0 for deterministic tool-calling so the agent
@@ -246,7 +248,9 @@ def run_agent(
                     )
 
     # Gemini can return content as a list of blocks: [{'type':'text','text':'...'}]
-    raw_content = final_message.content if hasattr(final_message, "content") else str(final_message)
+    raw_content = (
+        final_message.content if hasattr(final_message, "content") else str(final_message)
+    )
     if isinstance(raw_content, list):
         answer = " ".join(
             block.get("text", "") if isinstance(block, dict) else str(block)

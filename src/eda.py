@@ -77,8 +77,7 @@ def load_raw_data() -> pd.DataFrame:
     """
     if not RAW_CSV.exists():
         raise FileNotFoundError(
-            f"Raw data not found at {RAW_CSV}. "
-            "Run `python src/download_data.py` first."
+            f"Raw data not found at {RAW_CSV}. " "Run `python src/download_data.py` first."
         )
 
     df = pd.read_csv(RAW_CSV)
@@ -305,7 +304,9 @@ def plot_monthly_charges_by_churn(df: pd.DataFrame, save: bool = True) -> plt.Fi
 
     for label, color, name in [(0, CYAN, "No Churn"), (1, CORAL, "Churn")]:
         subset = df[df["Churn"] == label]["MonthlyCharges"]
-        ax.hist(subset, bins=40, alpha=0.5, color=color, label=name, density=True, edgecolor="none")
+        ax.hist(
+            subset, bins=40, alpha=0.5, color=color, label=name, density=True, edgecolor="none"
+        )
         subset.plot.kde(ax=ax, color=color, linewidth=1.5)
 
     ax.set_title("Distribución de MonthlyCharges por Churn")
@@ -334,7 +335,9 @@ def plot_contract_churn_rate(df: pd.DataFrame, save: bool = True) -> plt.Figure:
 
     rates = df.groupby("Contract")["Churn"].mean().sort_values(ascending=False) * 100
     colors = [CORAL, AMBER, GREEN]
-    bars = ax.barh(rates.index, rates.values, color=colors[:len(rates)], height=0.5, edgecolor="none")
+    bars = ax.barh(
+        rates.index, rates.values, color=colors[: len(rates)], height=0.5, edgecolor="none"
+    )
 
     for bar, val in zip(bars, rates.values, strict=False):
         ax.text(
@@ -357,9 +360,7 @@ def plot_contract_churn_rate(df: pd.DataFrame, save: bool = True) -> plt.Figure:
     return fig
 
 
-def plot_cramers_heatmap(
-    df: pd.DataFrame, cols: list[str], save: bool = True
-) -> plt.Figure:
+def plot_cramers_heatmap(df: pd.DataFrame, cols: list[str], save: bool = True) -> plt.Figure:
     """Heatmap of Cramer's V associations."""
     set_dark_style()
     matrix = compute_cramers_v_matrix(df, cols)

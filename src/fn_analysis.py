@@ -92,6 +92,7 @@ from src.preprocessing import get_feature_names, prepare_data
 # ── PaCMAP availability guard ──────────────────────────────────────────────────
 try:
     import pacmap  # type: ignore
+
     HAS_PACMAP = True
 except ImportError:
     HAS_PACMAP = False
@@ -176,14 +177,10 @@ def discover_best_model(
         None,
     )
     if auc_col is None:
-        raise ValueError(
-            f"Cannot find AUC column in {summary_csv}. Columns: {list(df.columns)}"
-        )
+        raise ValueError(f"Cannot find AUC column in {summary_csv}. Columns: {list(df.columns)}")
 
     # Identify model-name and feature-set columns
-    model_col = next(
-        (c for c in ["model_name", "model", "model_type"] if c in df.columns), None
-    )
+    model_col = next((c for c in ["model_name", "model", "model_type"] if c in df.columns), None)
     feat_col = next(
         (c for c in ["feature_set", "features", "feature_set_name"] if c in df.columns),
         None,
@@ -204,6 +201,7 @@ def discover_best_model(
 
     # Query MLflow for matching run
     import mlflow
+
     mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
     client = mlflow.MlflowClient()
     experiment = client.get_experiment_by_name(MLFLOW_EXPERIMENT_NAME)
@@ -217,8 +215,7 @@ def discover_best_model(
     runs = client.search_runs(
         experiment_ids=[experiment.experiment_id],
         filter_string=(
-            f"tags.model_type = '{model_name}' "
-            f"AND tags.feature_set = '{feature_set}'"
+            f"tags.model_type = '{model_name}' " f"AND tags.feature_set = '{feature_set}'"
         ),
         order_by=["metrics.test_roc_auc DESC"],
         max_results=1,
@@ -266,8 +263,7 @@ def load_model_and_pipeline(
     # Load preprocessing pipeline
     if not PREPROCESSOR_PATH.exists():
         raise FileNotFoundError(
-            f"Preprocessor not found at {PREPROCESSOR_PATH}. "
-            "Run `python -m src.train` first."
+            f"Preprocessor not found at {PREPROCESSOR_PATH}. " "Run `python -m src.train` first."
         )
     pipeline = load(PREPROCESSOR_PATH)
     logger.info(f"Preprocessor loaded from {PREPROCESSOR_PATH}")
@@ -283,6 +279,7 @@ def load_model_and_pipeline(
 
     if run_id is not None:
         import mlflow
+
         mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
         model_uri = f"runs:/{run_id}/model"
         model = mlflow.sklearn.load_model(model_uri)
@@ -292,10 +289,7 @@ def load_model_and_pipeline(
     # Fall back: look for any saved model file in MODELS_DIR
     model_files = sorted(MODELS_DIR.glob("*.joblib"))
     # Exclude known non-classifier artifacts
-    model_files = [
-        f for f in model_files
-        if "preprocessor" not in f.name and "shap" not in f.name
-    ]
+    model_files = [f for f in model_files if "preprocessor" not in f.name and "shap" not in f.name]
     if model_files:
         chosen = model_files[-1]  # most recently modified
         model = load(chosen)
@@ -358,9 +352,7 @@ def get_model_features(
         )
         return mask, names
 
-    logger.warning(
-        f"Unknown feature_set '{feature_set}'; falling back to 'all'."
-    )
+    logger.warning(f"Unknown feature_set '{feature_set}'; falling back to 'all'.")
     mask = np.ones(len(feature_names), dtype=bool)
     return mask, feature_names
 
@@ -443,9 +435,7 @@ def compute_revenue_at_risk(
         fn_df with an additional 'revenue_at_risk' column.
     """
     if "MonthlyCharges" not in fn_df.columns:
-        logger.warning(
-            "'MonthlyCharges' column not found. Revenue at risk set to 0."
-        )
+        logger.warning("'MonthlyCharges' column not found. Revenue at risk set to 0.")
         fn_df = fn_df.copy()
         fn_df["revenue_at_risk"] = 0.0
         return fn_df
@@ -455,8 +445,7 @@ def compute_revenue_at_risk(
     total = fn_df["revenue_at_risk"].sum()
     avg = fn_df["revenue_at_risk"].mean()
     logger.info(
-        f"Revenue at risk ({months} months): "
-        f"total = ${total:,.0f}, avg per FN = ${avg:,.0f}"
+        f"Revenue at risk ({months} months): " f"total = ${total:,.0f}, avg per FN = ${avg:,.0f}"
     )
     return fn_df
 
@@ -609,8 +598,13 @@ def plot_fn_profile(
         ax1.set_ylabel("Tenure (months)", color=TEXT_COLOR)
     else:
         ax1.text(
-            0.5, 0.5, "tenure not available",
-            ha="center", va="center", color=MUTED_COLOR, transform=ax1.transAxes,
+            0.5,
+            0.5,
+            "tenure not available",
+            ha="center",
+            va="center",
+            color=MUTED_COLOR,
+            transform=ax1.transAxes,
         )
     ax1.set_facecolor(DARK_CARD)
     ax1.tick_params(colors=MUTED_COLOR)
@@ -618,9 +612,7 @@ def plot_fn_profile(
     # ── Panel (1,0): Monthly charges distribution ─────────────────────────────
     ax2 = fig.add_subplot(gs[1, 0])
     if "MonthlyCharges" in segments["FN"].columns:
-        charges_data = [
-            segments[s]["MonthlyCharges"].dropna().values for s in seg_names
-        ]
+        charges_data = [segments[s]["MonthlyCharges"].dropna().values for s in seg_names]
         bp2 = ax2.boxplot(
             charges_data,
             patch_artist=True,
@@ -642,8 +634,13 @@ def plot_fn_profile(
         ax2.set_ylabel("Monthly Charges ($)", color=TEXT_COLOR)
     else:
         ax2.text(
-            0.5, 0.5, "MonthlyCharges not available",
-            ha="center", va="center", color=MUTED_COLOR, transform=ax2.transAxes,
+            0.5,
+            0.5,
+            "MonthlyCharges not available",
+            ha="center",
+            va="center",
+            color=MUTED_COLOR,
+            transform=ax2.transAxes,
         )
     ax2.set_facecolor(DARK_CARD)
     ax2.tick_params(colors=MUTED_COLOR)
@@ -677,8 +674,13 @@ def plot_fn_profile(
             )
     else:
         ax3.text(
-            0.5, 0.5, "Contract column not available",
-            ha="center", va="center", color=MUTED_COLOR, transform=ax3.transAxes,
+            0.5,
+            0.5,
+            "Contract column not available",
+            ha="center",
+            va="center",
+            color=MUTED_COLOR,
+            transform=ax3.transAxes,
         )
     ax3.set_facecolor(DARK_CARD)
     ax3.tick_params(colors=MUTED_COLOR)
@@ -758,8 +760,12 @@ def plot_revenue_at_risk(
         pct_customers = np.arange(1, len(sorted_rar) + 1) / len(sorted_rar) * 100
         ax1.plot(pct_customers, cumsum, color=CORAL, linewidth=2)
         ax1.plot(
-            [0, 100], [0, 100],
-            color=MUTED_COLOR, linewidth=1, linestyle="--", label="Perfect equality"
+            [0, 100],
+            [0, 100],
+            color=MUTED_COLOR,
+            linewidth=1,
+            linestyle="--",
+            label="Perfect equality",
         )
         idx_80 = np.searchsorted(pct_customers, 80)
         if idx_80 < len(cumsum):
@@ -771,9 +777,7 @@ def plot_revenue_at_risk(
                 label=f"Top 20% → {100 - cumsum[idx_80]:.0f}% of revenue",
             )
             ax1.axvline(80, color=AMBER, linewidth=1.5, linestyle=":")
-        ax1.set_title(
-            "Cumulative Revenue at Risk\n(% customers vs % revenue)", color=TEXT_COLOR
-        )
+        ax1.set_title("Cumulative Revenue at Risk\n(% customers vs % revenue)", color=TEXT_COLOR)
         ax1.set_xlabel("% of FN Customers (sorted by charges)", color=TEXT_COLOR)
         ax1.set_ylabel("% of Total Revenue at Risk", color=TEXT_COLOR)
         ax1.legend(facecolor=DARK_CARD, edgecolor=DARK_CARD, labelcolor=TEXT_COLOR)
@@ -781,8 +785,13 @@ def plot_revenue_at_risk(
     else:
         for ax in axes:
             ax.text(
-                0.5, 0.5, "revenue_at_risk not available",
-                ha="center", va="center", color=MUTED_COLOR, transform=ax.transAxes,
+                0.5,
+                0.5,
+                "revenue_at_risk not available",
+                ha="center",
+                va="center",
+                color=MUTED_COLOR,
+                transform=ax.transAxes,
             )
 
     plt.tight_layout()
@@ -1157,8 +1166,7 @@ def run_fn_analysis(
     # ── 1. Load raw data ──────────────────────────────────────────────────────
     if not RAW_CSV.exists():
         raise FileNotFoundError(
-            f"Raw data not found at {RAW_CSV}. "
-            "Run `python -m src.download_data` first."
+            f"Raw data not found at {RAW_CSV}. " "Run `python -m src.download_data` first."
         )
     df = pd.read_csv(RAW_CSV)
     df["TotalCharges"] = pd.to_numeric(df["TotalCharges"], errors="coerce")
@@ -1210,7 +1218,9 @@ def run_fn_analysis(
     )
     # X_model: the exact features fed to predict_proba
     X_model_test = X_test_proc[:, feat_mask]
-    model_feature_names_masked = [n for n, m in zip(feature_names_all, feat_mask, strict=False) if m]
+    model_feature_names_masked = [
+        n for n, m in zip(feature_names_all, feat_mask, strict=False) if m
+    ]
 
     # Reconcile feature count: if the model was trained on fewer features than
     # the current preprocessor produces (e.g. a feature was added after training),
@@ -1244,7 +1254,8 @@ def run_fn_analysis(
 
     # ── 8. Segment ────────────────────────────────────────────────────────────
     raw_cols_for_profiling = [
-        c for c in ["tenure", "MonthlyCharges", "TotalCharges", "Contract", "PaymentMethod"]
+        c
+        for c in ["tenure", "MonthlyCharges", "TotalCharges", "Contract", "PaymentMethod"]
         if c in test_df.columns
     ]
     X_profile = test_df[raw_cols_for_profiling].reset_index(drop=True)
@@ -1297,7 +1308,7 @@ if __name__ == "__main__":
         type=str,
         default=None,
         help="Path to a joblib-serialised sklearn classifier (e.g. models/best_model.joblib). "
-             "If omitted, auto-discovers the latest .joblib in models/.",
+        "If omitted, auto-discovers the latest .joblib in models/.",
     )
     parser.add_argument(
         "--run-id",
