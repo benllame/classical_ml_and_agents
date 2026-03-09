@@ -187,7 +187,7 @@ Run `python -m src.train --readme` to reproduce. Exact values are logged in MLfl
 ## Project Structure
 
 ```
-churn-intelligence-system/
+classical_ml_and_agents/
 ├── .github/workflows/
 │   ├── ci.yml                    # Lint + test on push
 │   └── monitor.yml               # Scheduled drift monitoring
@@ -248,8 +248,8 @@ churn-intelligence-system/
 ### Installation — Conda (Recommended)
 
 ```bash
-git clone https://github.com/yourusername/churn-intelligence-system.git
-cd churn-intelligence-system
+git clone https://github.com/benllame/classical_ml_and_agents.git
+cd classical_ml_and_agents
 
 conda env create -f environment.yml
 conda activate churn-intelligence
@@ -262,8 +262,8 @@ cp .env.example .env
 ### Installation — pip (Alternative)
 
 ```bash
-git clone https://github.com/yourusername/churn-intelligence-system.git
-cd churn-intelligence-system
+git clone https://github.com/benllame/classical_ml_and_agents.git
+cd classical_ml_and_agents
 
 python -m venv .venv
 source .venv/bin/activate  # Linux/Mac
@@ -751,36 +751,3 @@ flowchart LR
 ```
 
 ---
-
-## Approach: Pros and Cons
-
-### Pros
-
-| Aspect | Detail |
-|--------|--------|
-| **Statistical rigor** | 10-seed repeated benchmark + Wilcoxon signed-rank test — avoids lucky single-run results |
-| **Threshold calibration** | OOF threshold optimization (argmax F1-Macro) prevents test-set leakage |
-| **Feature engineering** | 16 interaction features grounded in information-theoretic evidence (MI + interaction information) |
-| **Model diversity** | RF (bagging) + XGBoost + CatBoost (both boosting variants) + MLP (neural baseline) |
-| **Cost sensitivity** | Profit curve with TP benefit = $200 / FP cost = $15 translates performance into business value |
-| **Reproducibility** | Fixed seeds, serialized pipeline (joblib), MLflow registry |
-| **Explainability** | SHAP TreeExplainer provides per-customer factor attribution |
-| **End-to-end serving** | FastAPI + Streamlit + ReAct agent — not just a notebook |
-
-### Cons / Limitations
-
-| Aspect | Detail |
-|--------|--------|
-| **Limited hyperopt** | RandomizedSearchCV with n_iter=20 is a compromise. Optuna with TPE sampler would find better hyperparameters at 3–5× compute cost |
-| **Static threshold** | OOF threshold is fixed at training time. Operating-point shifts require retraining |
-| **Class imbalance** | class_weight / scale_pos_weight over SMOTE avoids synthetic artifacts but may underserve the minority class if imbalance is extreme |
-| **Tabular-only** | No temporal modeling. Tenure is used as a scalar, losing sequential billing patterns |
-| **Single dataset** | Generalization beyond the Kaggle Telco dataset is untested |
-| **MLP sensitivity** | MLP varies significantly across seeds due to random initialization and early-stopping variance |
-| **CatBoost vs XGBoost** | p ≈ 0.25 — statistically indistinguishable on this dataset (~7k rows) |
-
----
-
-## License
-
-This project is licensed under the MIT License.
