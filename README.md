@@ -1,4 +1,4 @@
-# Churn Intelligence System v3
+# Churn prediction
 
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue?logo=python&logoColor=white)](https://www.python.org/)
 [![MLflow](https://img.shields.io/badge/MLflow-2.12%2B-0194E2?logo=mlflow&logoColor=white)](https://mlflow.org/)
